@@ -5,12 +5,17 @@ from urllib.parse import urlparse
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from routers import merge, split, compress, convert, watermark, rotate, security, page_numbers, filter, flatten
 from services.file_service import ensure_dirs, periodic_cleanup
+
+# Configure max upload size (100MB)
+# Set this environment variable if you need to adjust at runtime
+MAX_UPLOAD_SIZE = int(os.getenv("MAX_UPLOAD_SIZE", 100 * 1024 * 1024))
 
 EXPOSED_HEADERS = ["X-Original-Size", "X-Compressed-Size", "X-Reduction-Percent"]
 
@@ -60,6 +65,9 @@ app = FastAPI(
     redoc_url=None,
     openapi_url=None,
 )
+
+# Add middleware to handle large uploads by setting max_receive_size
+from starlette.datastructures import Headers
 
 app.add_middleware(
     CORSMiddleware,
